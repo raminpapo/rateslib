@@ -1,0 +1,212 @@
+# Documentation: pyproject.toml
+
+## File Metadata
+- **Path:** `pyproject.toml`
+- **Size:** 4,321 bytes
+- **Lines:** 176
+- **Words:** 491
+- **Extension:** `.toml`
+
+## Purpose
+Python package configuration and build specification.
+
+## Source Code
+
+```toml
+# pyproject.toml
+
+[build-system]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+module-name = "rateslib.rs"
+python-source = "python"
+bindings = "pyo3"
+compatibility = "linux"
+features = ["pyo3/extension-module"]
+# rustc --print target-list
+# https://doc.rust-lang.org/rustc/platform-support.html
+
+[project]
+name = "rateslib"
+version = "2.1.1"
+description = "A fixed income library for trading interest rates"
+readme = "README.md"
+authors = [{ name = "J H M Darbyshire"}]
+license = { file = "LICENSE" }
+keywords = ["interest rate", "derivatives", "swaps", "bonds", "fixed income"]
+dependencies = [
+    "numpy>=1.21.5,<3.0",
+    "matplotlib>=3.5.1,<4.0",
+    "pandas>=1.4.1,<3.0",
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[project.optional-dependencies]
+dev = [
+    # testing
+    "pytest>=8.3.2,<9.0",
+    "coverage>=7.6.1,<8.0",
+    # style/linting
+    "ruff>=0.6.3,<1.0",
+    "mypy>=1.13,<2.0",
+    "pandas-stubs>2.0,<3.0",
+    # doc building
+    "sphinx>=8.0,<8.2",
+    "sphinx-automodapi>=0.16.0,<1.0",
+    "sphinxcontrib-googleanalytics>=0.4,<1.0",
+    "sphinx-tabs>=3.4,<4.0",
+    "pydata-sphinx-theme>=0.15.4,<1.0",
+    "nbsphinx>=0.9.5,<1.0",
+    "jupyterlab>=4.0,<5.0",
+    "pickleshare>=0.7.5,<1.0",
+]
+
+[tool.pytest.ini_options]
+# pythonpath = [".", "python/rateslib"]
+minversion = "8.0"
+addopts = "--ignore-glob=*_ignore.py"  # use -s to show print capture, use -q for quiet, use -v for verbose
+testpaths = [
+    "python/tests",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning"
+]
+
+[tool.setuptools]
+packages = ["rateslib"]
+
+[project.urls]
+Homepage = "https://github.com/attack68/rateslib"
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".github",
+    "docs",
+    "notebooks",
+    "target",
+    "venv9",
+    "venv11",
+    "scratch.py",
+    "__pycache__",
+    "docs/source/conf.py",
+    "old",
+    "build",
+    "dist",
+    "bench",
+]
+# Same as Black.
+line-length = 100
+indent-width = 4
+# Assume Python 3.12
+target-version = "py310"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = false
+
+[tool.ruff.lint]
+select = [
+    # "ANN",  # flake8-annotations  -- Superceded by the use of mypy
+    # "COM",  # flake8-commas  -- conflicts with ruff format
+    "E",  # pycodestyle
+    "W",
+    "F",  # Pyflakes
+    "UP",  # pyupgrade
+    "B",  # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "C4",  # flake8-comprehensions
+    "S",  # flake8-bandit
+    "PIE",  # flake8-pie
+    "A",  # flake8-builtins
+    "Q",  # flake8-quotes
+    "PT",  # flake8-pytest-style
+    "C90",  # mccabe complexity  -- Requires work
+    "I",  # isort
+    "N",  # pep8 naming
+    # "RUF",  # -- Requires work
+    # "D", Pydocs -- requires work
+]
+ignore = [
+    "A005",  # json and typing module name shadowing is allowed
+    "PT011", "PT030", "PT031", # -- Requires work inputting match statements
+    "PIE790",  # unnecessary pass
+    "C408",  # unnecessary dict call
+    "N806", "N815", "N803", "N802",
+    "SIM116",  # use a dict instead of successive ifs: off due to performance degradation.
+    "SIM108",  # ternary operators: off due to code coverage degradation.
+    "B008",  # function calls in argument defaults, e.g. NoInput(0)
+    # "B006",  # mutable data structures for argument defaults, e.g. []
+    "B904",  # raising within except clauses
+    "B028",  # no explicit stack level
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402", "N801"]
+"typing.py" = ["E501"]
+"python/tests/*" = ["F401", "B", "N", "S", "ANN", "D"]
+"rust/*" = ["D"]
+
+[tool.ruff.lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+max-complexity = 14
+
+[tool.mypy]
+files = ["python/"]
+exclude = [
+    "python/tests",
+    # "/scheduling/wrappers.py"
+    # "/instruments/fx_volatility/strategies.py",
+    # "/instruments/generics.py",
+    # "/instruments/rates/inflation.py",
+    # "solver.py",
+]
+strict = true
+#packages = [
+#    "rateslib"
+#]
+
+[tool.coverage.run]
+omit = [
+    "/typing.py",
+    # "python/tests/*"
+]
+
+[tool.isort]
+profile = "black"
+line_length = 100
+src_paths = ["python"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+```
+
+## Detailed Analysis
+
+### Configuration File Analysis
+
+**Format:** .toml
+
+**Purpose:** Defines project settings and configuration parameters.
+
+
+
+## Related Files
+See the [parent directory index](./index.md) for related files.
+
+## Usage Notes
+- Last modified: 2025-11-18T07:49:28.589589
+- Encoding: UTF-8 (assumed)
+
+---
+*Generated by Repo Book Generator v1.0.0*

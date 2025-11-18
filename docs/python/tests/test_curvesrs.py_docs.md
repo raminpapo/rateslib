@@ -1,0 +1,269 @@
+# Documentation: test_curvesrs.py
+
+## File Metadata
+- **Path:** `python/tests/test_curvesrs.py`
+- **Size:** 4,728 bytes
+- **Lines:** 207
+- **Words:** 387
+- **Extension:** `.py`
+
+## Purpose
+Unit test file containing test cases and assertions.
+
+## Source Code
+
+```python
+import math
+from datetime import datetime as dt
+
+import pytest
+from rateslib.curves.rs import (
+    CurveObj,
+    CurveRs,
+    FlatBackwardInterpolator,
+    FlatForwardInterpolator,
+    LinearInterpolator,
+    LinearZeroRateInterpolator,
+    LogLinearInterpolator,
+    _get_convention,
+    _get_convention_str,
+    _get_interpolator,
+)
+from rateslib.dual import Dual2
+from rateslib.dual.utils import ADOrder, _get_adorder
+from rateslib.rs import Convention, Modifier
+from rateslib.scheduling import get_calendar
+from rateslib.serialization import from_json
+
+
+@pytest.mark.parametrize(
+    "convention",
+    [
+        Convention.One,
+        Convention.OnePlus,
+        Convention.Act365F,
+        Convention.Act365FPlus,
+        Convention.Act360,
+        Convention.ThirtyE360,
+        Convention.Thirty360,
+        Convention.Thirty360ISDA,
+        Convention.ActActISDA,
+        Convention.ActActICMA,
+        Convention.Bus252,
+    ],
+)
+def test_pickle_convention(convention) -> None:
+    import pickle
+
+    assert convention == pickle.loads(pickle.dumps(convention))
+
+
+@pytest.fixture
+def curve():
+    return CurveObj(
+        nodes={
+            dt(2022, 3, 1): 1.00,
+            dt(2022, 3, 31): 0.99,
+        },
+        interpolator=_get_interpolator("linear"),
+        id="v",
+        ad=_get_adorder(1),
+        convention=_get_convention("Act360"),
+        modifier=Modifier.ModF,
+        calendar=get_calendar("all"),
+    )
+
+
+@pytest.fixture
+def curvers():
+    return CurveRs(
+        nodes={
+            dt(2022, 3, 1): 1.00,
+            dt(2022, 3, 31): 0.99,
+        },
+        interpolation="log_linear",
+        id="v",
+        ad=1,
+    )
+
+
+@pytest.fixture
+def indexcurvers():
+    return CurveObj(
+        nodes={
+            dt(2022, 3, 1): 1.00,
+            dt(2022, 3, 31): 0.99,
+        },
+        interpolator=_get_interpolator("linear"),
+        id="v",
+        ad=_get_adorder(1),
+        convention=_get_convention("Act360"),
+        modifier=Modifier.ModF,
+        calendar=get_calendar("all"),
+        index_base=100.0,
+    )
+
+
+@pytest.mark.parametrize(
+    ("name", "expected"),
+    [
+        ("linear", LinearInterpolator),
+        ("log_linear", LogLinearInterpolator),
+        ("linear_zero_rate", LinearZeroRateInterpolator),
+        ("flat_forward", FlatForwardInterpolator),
+        ("flat_backward", FlatBackwardInterpolator),
+    ],
+)
+def test_get_interpolator(name, expected) -> None:
+    result = _get_interpolator(name)
+    assert type(result) is expected
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "linear",
+        "log_linear",
+        "linear_zero_rate",
+        "flat_forward",
+        "flat_backward",
+    ],
+)
+def test_pickle_interpolator(name) -> None:
+    import pickle
+
+    obj = _get_interpolator(name)
+    bytes_ = pickle.dumps(obj)
+    pickle.loads(bytes_)
+
+
+def test_get_interpolation(curve) -> None:
+    result = curve.interpolation
+    assert result == "linear"
+
+
+def test_get_modifier(curvers) -> None:
+    result = curvers.modifier
+    assert result == "MF"
+
+
+def test_get_convention(curvers) -> None:
+    result = curvers.convention
+    assert result == "Act360"
+
+
+def test_get_ad(curvers) -> None:
+    result = curvers.ad
+    assert result == 1
+
+
+def test_get_interpolator_raises() -> None:
+    with pytest.raises(ValueError, match="Interpolator `name` is invalid"):
+        _get_interpolator("bad")
+
+
+def test_get_item(curve, curvers) -> None:
+    result = curve[dt(2022, 3, 16)]
+    assert abs(result - 0.995) < 1e-14
+
+    result = curvers[dt(2022, 3, 16)]
+    expected = math.log(1.0) + (16 - 1) / (31 - 1) * (math.log(0.99) - math.log(1.0))
+    expected = math.exp(expected)
+    assert abs(result - expected) < 1e-14
+
+
+def test_json_round_trip(curvers) -> None:
+    json = curvers.to_json()
+    curve2 = from_json(json)
+    assert curvers == curve2
+
+
+@pytest.mark.parametrize(
+    "kind",
+    [
+        "linear",
+        "log_linear",
+        "linear_zero_rate",
+        "flat_forward",
+        "flat_backward",
+    ],
+)
+def test_interp_constructs(kind) -> None:
+    result = CurveRs(
+        nodes={
+            dt(2022, 3, 1): 1.00,
+            dt(2022, 3, 31): 0.99,
+        },
+        interpolation=kind,
+        id="v",
+        ad=1,
+    )
+    assert isinstance(result, CurveRs)
+
+
+def test_index_value(indexcurvers) -> None:
+    result = indexcurvers.index_value(dt(2022, 3, 31))
+    assert abs(result - 100.0 / 0.99) < 1e-12
+
+
+def test_set_ad_order(curvers) -> None:
+    curvers._set_ad_order(2)
+    assert curvers.nodes == {
+        dt(2022, 3, 1): Dual2(1.0, ["v0"], [], []),
+        dt(2022, 3, 31): Dual2(0.99, ["v1"], [], []),
+    }
+
+
+def test_pickle(curvers) -> None:
+    import pickle
+
+    obj = pickle.dumps(curvers)
+    pickle.loads(obj)
+
+```
+
+## Detailed Analysis
+
+### Python File Analysis
+
+**Functions defined:** 17
+- `test_pickle_convention()`
+- `curve()`
+- `curvers()`
+- `indexcurvers()`
+- `test_get_interpolator()`
+- `test_pickle_interpolator()`
+- `test_get_interpolation()`
+- `test_get_modifier()`
+- `test_get_convention()`
+- `test_get_ad()`
+- `test_get_interpolator_raises()`
+- `test_get_item()`
+- `test_json_round_trip()`
+- `test_interp_constructs()`
+- `test_index_value()`
+- `test_set_ad_order()`
+- `test_pickle()`
+
+**Dependencies:** 9
+- `datetime`
+- `math`
+- `pytest`
+- `rateslib.curves.rs`
+- `rateslib.dual`
+- `rateslib.dual.utils`
+- `rateslib.rs`
+- `rateslib.scheduling`
+- `rateslib.serialization`
+
+
+
+## Related Files
+See the [parent directory index](./index.md) for related files.
+
+## Usage Notes
+- Last modified: 2025-11-18T07:49:28.662590
+- Encoding: UTF-8 (assumed)
+
+---
+*Generated by Repo Book Generator v1.0.0*
