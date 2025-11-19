@@ -1270,7 +1270,7 @@ Generates comprehensive documentation for the rateslib repository.
 See the [parent directory index](./index.md) for related files.
 
 ## Usage Notes
-- Last modified: 2025-11-18T07:53:44.178105
+- Last modified: 2025-11-18T07:53:44
 - Encoding: UTF-8 (assumed)
 
 ---

@@ -176,7 +176,7 @@ Generic text file. See source code above for full content.
 See the [parent directory index](./index.md) for related files.
 
 ## Usage Notes
-- Last modified: 2025-11-18T07:49:28.584589
+- Last modified: 2025-11-18T07:49:28
 - Encoding: UTF-8 (assumed)
 
 ---
